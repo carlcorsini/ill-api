@@ -13,9 +13,8 @@ app.use(cors());
 
 
 app.get('/ill-api', async (req, res) => {
-  let response = await fetch("https://data.illinois.gov/api/3/action/datastore_search?resource_id=fecd51fd-830f-4245-b4e0-9d952992f855&q=jones")
+  let response = await fetch(`https://data.illinois.gov/api/3/action/datastore_search?resource_id=fecd51fd-830f-4245-b4e0-9d952992f855&q=${req.query.q}`)
   let result = await response.json()
-  console.log(result)
   res.status(200).send(result)
 });
 
@@ -28,7 +27,7 @@ app.use((err, req, res, next) => {
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
-    console.log(`Radio Server is running on ${port}!`);
+    console.log(`Illinois Licenses is running on ${port}!`);
   });
 }
 
