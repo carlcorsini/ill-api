@@ -144,7 +144,7 @@ app.post(
           },
           method: 'POST',
           body: JSON.stringify({
-            clientCode: ['8002', '4004'],
+            clientCode: [],
             searchMethod,
             licenseNumbers:
               searchMethod === 'LIC_NBR' ? searchCriteria : undefined,
