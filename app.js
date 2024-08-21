@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { body, query, validationResult } = require('express-validator');
+const moment = require('moment'); 
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -42,18 +43,72 @@ app.get(
   }
 );
 
+app.get(
+  '/colorado-api',
+  [query('licenseNumber').notEmpty().withMessage('Query parameter licenseNumber is required')],
+  handleValidationErrors,
+  async (req, res, next) => {
+    try {
+      const licenseNumber = req.query.licenseNumber;
+      const response = await fetch(
+        `https://data.colorado.gov/resource/7s5z-vewr.json?licensenumber=${licenseNumber}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Colorado API responded with ${response.status}`);
+      }
+
+      let result = await response.json();
+
+      // Convert timestamps to readable dates
+      result = result.map((record) => {
+        return {
+          ...record,
+          licensefirstissuedate: record.licensefirstissuedate
+            ? moment(record.licensefirstissuedate).format('MM/DD/YYYY')
+            : null,
+          licenselastreneweddate: record.licenselastreneweddate
+            ? moment(record.licenselastreneweddate).format('MM/DD/YYYY')
+            : null,
+          licenseexpirationdate: record.licenseexpirationdate
+            ? moment(record.licenseexpirationdate).format('MM/DD/YYYY')
+            : null,
+        };
+      });
+
+      res.status(200).send(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
 // /cali-api endpoint with input validation, secure auth, and error handling
 app.post(
   '/cali-api',
   [
-    body('licenseNumbers')
-      .isArray({ min: 1 })
-      .withMessage('licenseNumbers must be a non-empty array'),
+    body('licenseNumbers').optional().isArray({ min: 1 }).withMessage('licenseNumbers must be a non-empty array'),
+    body('name').optional().isString().withMessage('Name must be a string'),
   ],
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { licenseNumbers } = req.body;
+      const { licenseNumbers, name } = req.body;
+      let searchMethod = 'LIC_NBR'; // Default search method is by license number
+      let searchCriteria = licenseNumbers;
+
+      // If searching by name, adjust the search method and format the name
+      if (name) {
+        searchMethod = 'SNDX';
+        const nameParts = name.trim().split(/\s+/);
+        if (nameParts.length === 2) {
+          searchCriteria = `${nameParts[1]}, ${nameParts[0]}`; // Format as 'last name, first name'
+        } else {
+          searchCriteria = name; // Leave as-is if it's a single word or already in the correct format
+        }
+      }
+
       const response = await fetch(
         `https://search-api.dca.ca.gov/licenseSearchService/getPublicLicenseSearch`,
         {
@@ -65,8 +120,9 @@ app.post(
           method: 'POST',
           body: JSON.stringify({
             clientCode: ['8002', '4004'],
-            searchMethod: 'LIC_NBR',
-            licenseNumbers,
+            searchMethod,
+            licenseNumbers: searchMethod === 'LIC_NBR' ? searchCriteria : undefined,
+            name: searchMethod === 'SNDX' ? searchCriteria : undefined,
           }),
         }
       );
