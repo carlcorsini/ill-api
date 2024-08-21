@@ -146,8 +146,8 @@ app.post(
           body: JSON.stringify({
             clientCode: ['8002', '4004'],
             searchMethod,
-            // licenseNumbers:
-            //   searchMethod === 'LIC_NBR' ? searchCriteria : undefined,
+            licenseNumbers:
+              searchMethod === 'LIC_NBR' ? searchCriteria : undefined,
             name: searchMethod === 'SNDX' ? searchCriteria : undefined,
           }),
         },
