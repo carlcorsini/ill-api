@@ -30,7 +30,7 @@ app.get(
   async (req, res, next) => {
     try {
       const response = await fetch(
-        `https://data.illinois.gov/api/3/action/datastore_search?resource_id=fecd51fd-830f-4245-b4e0-9d952992f855&q=${req.query.q}`
+        `https://data.illinois.gov/api/3/action/datastore_search?resource_id=e13b2a67-21eb-425d-9692-24a1beb9a14e&q=${req.query.q}`
       );
       if (!response.ok) {
         throw new Error(`Illinois API responded with ${response.status}`);
@@ -101,7 +101,7 @@ app.post(
       // If searching by name, adjust the search method and format the name
       if (name) {
         searchMethod = 'SNDX';
-        const nameParts = name.trim().split(/\s+/);
+        const nameParts = name.trim().split(/\s+/);asdf
         if (nameParts.length === 2) {
           searchCriteria = `${nameParts[1]}, ${nameParts[0]}`; // Format as 'last name, first name'
         } else {
