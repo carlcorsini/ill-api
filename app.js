@@ -29,19 +29,32 @@ app.get(
   handleValidationErrors,
   async (req, res, next) => {
     try {
+      const { q } = req.query;
+
       const response = await fetch(
-        `https://data.illinois.gov/api/3/action/datastore_search?resource_id=e13b2a67-21eb-425d-9692-24a1beb9a14e&q=${req.query.q}`,
+        `https://data.illinois.gov/api/3/action/datastore_search?resource_id=${process.env.IL_RESOURCE_ID}&q=${encodeURIComponent(q)}&limit=1000`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            Limit: 1000
+          },
+        }
       );
+
       if (!response.ok) {
         throw new Error(`Illinois API responded with ${response.status}`);
       }
+
       const result = await response.json();
+      console.log(result.result.records)
       res.status(200).send(result);
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
+
 
 app.get('/colo-api', async (req, res, next) => {
   try {
