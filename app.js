@@ -47,7 +47,6 @@ app.get(
       }
 
       const result = await response.json();
-      console.log(result.result.records)
       res.status(200).send(result);
     } catch (error) {
       next(error);
